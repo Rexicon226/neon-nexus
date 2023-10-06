@@ -34,6 +34,21 @@ pub const FarPtr = packed struct {
         );
     }
 
+    pub fn writeRepeat(self: FarPtr, value: u8, count: usize) void {
+        _ = asm volatile (
+            \\ cld
+            \\ push %%es
+            \\ lesl (%[far_ptr]), %%edi
+            \\ rep stosb %%es:(%%edi)
+            \\ pop %%es
+            : [_] "=&{edi}" (-> usize),
+            : [far_ptr] "r" (&self),
+              [_] "{ecx}" (count),
+              [_] "{eax}" (value),
+            : "cc", "ecx", "eax", "memory"
+        );
+    }
+
     pub const Reader = std.io.Reader(*FarPtr, error{}, readForReader);
     pub const Writer = std.io.Writer(*FarPtr, error{}, writeForWriter);
 

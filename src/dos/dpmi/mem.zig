@@ -86,10 +86,11 @@ pub const ExtMemBlock = struct {
     }
 };
 
+// TODO(SeedyROM): This whole thing needs to be removed of magic values...
 pub const VideoMemBlock = struct {
     protected_mode_segment: Segment,
 
-    var far_ptr: FarPtr = .{
+    threadlocal var far_ptr: FarPtr = .{
         .segment = 0,
         .offset = 0,
     };
@@ -135,7 +136,7 @@ pub const VideoMemBlock = struct {
             \\ popw %[flags]
             : [flags] "=r" (-> u16),
             : [_] "{ax}" (0x0008), // Call DPMI function 8
-              [_] "{cx}" (0x0002), // Segment limit
+              [_] "{cx}" (0x0002), // Segment limit TODO(SeedyROM): This is weird???
               [_] "{dx}" (0x0000),
             : "cc"
         );
@@ -146,7 +147,12 @@ pub const VideoMemBlock = struct {
         };
     }
 
-    pub inline fn write(self: VideoMemBlock, x: u16, y: u16, color: u8) !void {
+    pub inline fn clear(self: VideoMemBlock, color: u8) void {
+        far_ptr = self.protected_mode_segment.farPtr();
+        far_ptr.writeRepeat(color, 320 * 200);
+    }
+
+    pub inline fn writePixel(self: VideoMemBlock, x: u16, y: u16, color: u8) !void {
         far_ptr = self.protected_mode_segment.farPtr();
         far_ptr.offset = (y << 8) + (y << 6) + x;
         var writer = far_ptr.writer();
