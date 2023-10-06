@@ -136,7 +136,7 @@ pub const VideoMemBlock = struct {
             \\ popw %[flags]
             : [flags] "=r" (-> u16),
             : [_] "{ax}" (0x0008), // Call DPMI function 8
-              [_] "{cx}" (0x0002), // Segment limit TODO(SeedyROM): This is weird???
+              [_] "{cx}" (0x0002), // Hold the max segment limit...
               [_] "{dx}" (0x0000),
             : "cc"
         );
@@ -145,6 +145,10 @@ pub const VideoMemBlock = struct {
         return VideoMemBlock{
             .protected_mode_segment = .{ .selector = protected_selector },
         };
+    }
+
+    pub inline fn getSegment(self: VideoMemBlock) Segment {
+        return self.protected_mode_segment;
     }
 
     pub inline fn clear(self: VideoMemBlock, color: u8) void {
