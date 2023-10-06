@@ -85,3 +85,71 @@ pub const ExtMemBlock = struct {
         return segment;
     }
 };
+
+pub const VideoMemBlock = struct {
+    protected_mode_segment: Segment,
+
+    var far_ptr: FarPtr = .{
+        .segment = 0,
+        .offset = 0,
+    };
+
+    pub fn alloc(address: u32) !VideoMemBlock {
+        var protected_selector: u16 = 0;
+        var flags: u16 = 0;
+
+        // Allocate a DPMI descriptor
+        flags = asm volatile (
+            \\ int $0x31
+            \\ pushfw
+            \\ popw %[flags]
+            : [flags] "=r" (-> u16),
+              [_] "={ax}" (protected_selector),
+            : [_] "{ax}" (0x0000), // Call DPMI function 0
+              [_] "{cx}" (1), // Allocate one descriptor
+            : "cc"
+        );
+        if (flags & 1 != 0) return error.DpmiAllocError;
+
+        const addr_hi = @byteSwap(@as(u16, @intCast(address >> 16 & 0xFFFF))) >> 4;
+        const addr_lo = @byteSwap(@as(u16, @intCast(address & 0xFFFF)));
+
+        // Set the segment base address to VGA memory
+        flags = asm volatile (
+            \\ int $0x31
+            \\ pushfw
+            \\ popw %[flags]
+            : [flags] "=r" (-> u16),
+            : [_] "{ax}" (0x0007), // Call DPMI function 7
+              [_] "{bx}" (protected_selector),
+              [_] "{cx}" (addr_hi), // Segment base address
+              [_] "{dx}" (addr_lo),
+            : "cc"
+        );
+        if (flags & 1 != 0) return error.DpmiSetSegmentBaseError;
+
+        // Set the size of the segment to 64K
+        flags = asm volatile (
+            \\ int $0x31
+            \\ pushfw
+            \\ popw %[flags]
+            : [flags] "=r" (-> u16),
+            : [_] "{ax}" (0x0008), // Call DPMI function 8
+              [_] "{cx}" (0x0002), // Segment limit
+              [_] "{dx}" (0x0000),
+            : "cc"
+        );
+        if (flags & 1 != 0) return error.DpmiSetSegmentLimitError;
+
+        return VideoMemBlock{
+            .protected_mode_segment = .{ .selector = protected_selector },
+        };
+    }
+
+    pub inline fn write(self: VideoMemBlock, x: u16, y: u16, color: u8) !void {
+        far_ptr = self.protected_mode_segment.farPtr();
+        far_ptr.offset = (y << 8) + (y << 6) + x;
+        var writer = far_ptr.writer();
+        try writer.writeInt(u8, color, .Little);
+    }
+};

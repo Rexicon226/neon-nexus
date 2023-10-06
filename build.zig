@@ -10,8 +10,8 @@ pub fn build(b: *Build) !void {
         else => |opt| opt,
     };
 
-    const demo_coff = b.addExecutable(.{
-        .name = "demo",
+    const neon_nexus_coff = b.addExecutable(.{
+        .name = "nnexus",
         .target = .{
             .cpu_arch = .x86,
             .cpu_model = .{ .explicit = Cpu.Model.generic(.x86) },
@@ -22,17 +22,17 @@ pub fn build(b: *Build) !void {
         .single_threaded = true,
     });
 
-    demo_coff.addModule("dos", b.addModule("dos", .{
+    neon_nexus_coff.addModule("dos", b.addModule("dos", .{
         .source_file = .{ .path = "src/dos.zig" },
     }));
 
-    demo_coff.setLinkerScriptPath(.{ .path = "src/djcoff.ld" });
-    demo_coff.disable_stack_probing = true;
-    demo_coff.strip = true;
+    neon_nexus_coff.setLinkerScriptPath(.{ .path = "src/djcoff.ld" });
+    neon_nexus_coff.disable_stack_probing = true;
+    neon_nexus_coff.strip = true;
 
     const neon_nexus_exe_inputs = [_]Build.LazyPath{
         .{ .path = "deps/cwsdpmi/bin/CWSDSTUB.EXE" },
-        demo_coff.addObjCopy(.{ .format = .bin }).getOutput(),
+        neon_nexus_coff.addObjCopy(.{ .format = .bin }).getOutput(),
     };
     const neon_nexus_exe = FileRecipeStep.create(b, concatFiles, &neon_nexus_exe_inputs, .bin, "nnexus.exe");
 
