@@ -10,7 +10,7 @@ pub const DosMemBlock = struct {
     len: usize,
 
     pub fn alloc(size: u20) !DosMemBlock {
-        const aligned_size = std.mem.alignForwardGeneric(@TypeOf(size), size, 16);
+        const aligned_size = std.mem.alignForward(@TypeOf(size), size, 16);
         var protected_selector: u16 = 0;
         var real_segment: u16 = 0;
         const flags = asm volatile (

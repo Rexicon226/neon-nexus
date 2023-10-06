@@ -11,31 +11,78 @@ comptime {
 
 const VGA_256 = 0x13;
 
-var video_buffer: system.FarPtr = system.FarPtr{
-    .offset = 0x0000,
-    .segment = 0xA000,
-};
+var video_memory_segment: u16 = 0;
+
+const stdout = std.io.getStdOut().writer();
 
 pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
-    try stdout.print("What's up Sinon!!! Let's FUCKIN GOOOOOOOOO!!!!!!\r\n", .{});
-
+    try setupVideoMemoryAccess();
     setVideoMode(VGA_256);
 
     // Draw 10 pixels
-    for (0..10) |x| {
-        try drawPixel(@as(u16, @intCast(10 + x)), @as(u16, 20), 0xFF);
+    for (0..320 * 200) |i| {
+        const x = @as(u16, @intCast(i % 320));
+        const y = @as(u16, @intCast(i / 320));
+        try drawPixel(x, y, @as(u8, @intCast(x & y & 255)));
     }
+
+    try stdout.print("The colors Sinon... THE COLORS!!!\r\n", .{});
 }
 
-fn drawPixel(x: u16, y: u16, color: u8) !void {
-    var offset = video_buffer.offset;
-    var vb_writer = video_buffer.writer();
-    video_buffer.offset = offset + ((y << 8) + (y << 6)) + x;
-    try vb_writer.writeInt(u8, color, .Little);
-    video_buffer.offset = offset;
+inline fn drawPixel(x: u16, y: u16, color: u8) !void {
+    var far_ptr = system.FarPtr{
+        .segment = video_memory_segment,
+        .offset = (y << 8) + (y << 6) + x,
+    };
+
+    var vb_writer = far_ptr.writer();
+    try vb_writer.writeInt(u8, color, .Big);
 }
 
-fn setVideoMode(video_mode: u8) void {
+inline fn setVideoMode(video_mode: u8) void {
     _ = os.system.int(0x10, .{ .eax = video_mode });
+}
+
+inline fn setupVideoMemoryAccess() !void {
+    var flags: u16 = 0;
+
+    // Allocate a DPMI descriptor
+    flags = asm volatile (
+        \\ int $0x31
+        \\ pushfw
+        \\ popw %[flags]
+        : [flags] "=r" (-> u16),
+          [_] "={ax}" (video_memory_segment),
+        : [_] "{ax}" (0x0000), // Call DPMI function 0
+          [_] "{cx}" (1), // Allocate one descriptor
+        : "cc"
+    );
+    if (flags & 1 != 0) return error.DpmiAllocError;
+
+    // Set the segment base address to VGA memory
+    flags = asm volatile (
+        \\ int $0x31
+        \\ pushfw
+        \\ popw %[flags]
+        : [flags] "=r" (-> u16),
+        : [_] "{ax}" (0x0007), // Call DPMI function 7
+          [_] "{bx}" (video_memory_segment),
+          [_] "{cx}" (0x000A), // Segment base address
+          [_] "{dx}" (0x0000),
+        : "cc"
+    );
+    if (flags & 1 != 0) return error.DpmiSetSegmentBaseError;
+
+    // Set the size of the segment to 64K
+    flags = asm volatile (
+        \\ int $0x31
+        \\ pushfw
+        \\ popw %[flags]
+        : [flags] "=r" (-> u16),
+        : [_] "{ax}" (0x0008), // Call DPMI function 8
+          [_] "{cx}" (0x0002), // Segment limit
+          [_] "{dx}" (0x00000),
+        : "cc"
+    );
+    if (flags & 1 != 0) return error.DpmiSetSegmentLimitError;
 }
