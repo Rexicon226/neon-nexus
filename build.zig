@@ -10,15 +10,17 @@ pub fn build(b: *Build) !void {
         else => |opt| opt,
     };
 
+    const program_name: []const u8 = b.option([]const u8, "program", "Which program to build from the src/programs directory").?;
+
     const neon_nexus_coff = b.addExecutable(.{
-        .name = "nnexus",
+        .name = "output.exe", // Name overriden later.
         .target = .{
             .cpu_arch = .x86,
             .cpu_model = .{ .explicit = Cpu.Model.generic(.x86) },
             .os_tag = .other,
         },
         .optimize = optimize,
-        .root_source_file = .{ .path = "src/main.zig" },
+        .root_source_file = .{ .path = b.fmt("src/programs/{s}.zig", .{program_name}) },
         .single_threaded = true,
     });
 
@@ -36,7 +38,7 @@ pub fn build(b: *Build) !void {
     };
     const neon_nexus_exe = FileRecipeStep.create(b, concatFiles, &neon_nexus_exe_inputs, .bin, "nnexus.exe");
 
-    const installed_neon_nexus = b.addInstallBinFile(neon_nexus_exe.getOutput(), "nnexus.exe");
+    const installed_neon_nexus = b.addInstallBinFile(neon_nexus_exe.getOutput(), b.fmt("{s}.exe", .{program_name}));
     b.getInstallStep().dependOn(&installed_neon_nexus.step);
 
     const run_in_dosbox = b.addSystemCommand(&[_][]const u8{ "dosbox", "-conf", "dosbox_config.ini" });
