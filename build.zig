@@ -10,7 +10,7 @@ pub fn build(b: *Build) !void {
         else => |opt| opt,
     };
 
-    const program_name: []const u8 = b.option([]const u8, "program", "Which program to build from the src/programs directory").?;
+    const program_name: []const u8 = b.option([]const u8, "program", "Which program to build from the src/programs directory") orelse return error.@"No Program was selected. Please run with -Dprogram=";
 
     const neon_nexus_coff = b.addExecutable(.{
         .name = "output.exe", // Name overriden later.
