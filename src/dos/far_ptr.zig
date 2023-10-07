@@ -34,6 +34,22 @@ pub const FarPtr = packed struct {
         );
     }
 
+    pub fn copyFrom(self: FarPtr, src: FarPtr, count: usize) void {
+        _ = asm volatile (
+            \\ cld
+            \\ push %%fs
+            \\ lfsl (%[src]), %%esi
+            \\ lesl (%[dest]), %%edi
+            \\ rep movsb %%fs:(%%esi), %%es:(%%edi)
+            \\ pop %%fs
+            : [_] "=&{esi}" (-> usize),
+            : [src] "r" (&src),
+              [dest] "r" (&self),
+              [_] "{ecx}" (count),
+            : "cc", "ecx", "esi", "edi", "memory"
+        );
+    }
+
     pub fn writeRepeat(self: FarPtr, value: u8, count: usize) void {
         _ = asm volatile (
             \\ cld

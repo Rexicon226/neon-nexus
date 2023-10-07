@@ -86,7 +86,6 @@ pub const ExtMemBlock = struct {
     }
 };
 
-// TODO(SeedyROM): This whole thing needs to be removed of magic values...
 pub const VideoMemBlock = struct {
     protected_mode_segment: Segment,
 

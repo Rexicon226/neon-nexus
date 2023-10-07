@@ -15,6 +15,10 @@ const VGA_256 = 0x13;
 const VGA_256_SIZE = 320 * 200;
 // Address of the memory mapped VGA card
 const VGA_ADDRESS = 0xA0000000;
+// VGA input status 1
+const VGA_INPUT_STATUS_1 = 0x03DA;
+// VRetrace
+const VGA_VRETRACE = 0x08;
 
 // Our vram segment
 var vram: dpmi.VideoMemBlock = undefined;
@@ -44,63 +48,75 @@ pub fn main() !void {
     // Get the segment for the vram backbuffer
     vram_backbuffer_segment = vram_backbuffer.createSegment(.data);
 
-    // Draw buffer
-    var frame_buffer = vram_backbuffer_segment.farPtr();
-    _ = frame_buffer;
-
     // Set the video mode to 320x200x256
     setVideoMode(VGA_256);
 
     // Setup the player
-    var player_position = Vec2{ .x = 160, .y = 100 };
-    _ = player_position;
+    var player_position = Vec2{ .x = 0, .y = 0 };
     var player_size = Vec2{ .x = 16, .y = 16 };
-    _ = player_size;
 
     // Game loop
     while (true) {
-        // Clear the screen to cyan
-        vram.clear(0xCA);
+        // Move the player to the right
+        player_position.x += 5;
+        player_position.x %= 320;
+        player_position.y += 2;
+        player_position.y %= 200;
 
-        wait30Frames();
+        // Clear the screen to cyan
+        clearFrameBuffer(vram_backbuffer_segment, 0x03);
 
         // Draw the player as a red rectangle
-        // for (0..player_size.y) |y| {
-        //     _ = y;
-        //     for (0..player_size.x) |x| {
-        //         _ = x;
-        //         var fp = vram_backbuffer_segment.farPtr();
-        //         _ = fp;
-        //         // try vram.writePixel(
-        //         //     @as(u16, @intCast(player_position.x + x)),
-        //         //     @as(u16, @intCast(player_position.y + y)),
-        //         //     0xAC,
-        //         // );
-        //     }
-        // }
+        for (0..player_size.y) |y| {
+            for (0..player_size.x) |x| {
+                // If the position is out of bounds, skip it
+                if (((player_position.x + x) >= 320) or ((player_position.y + y) >= 200)) {
+                    continue;
+                }
+                try drawPixel(
+                    vram_backbuffer_segment,
+                    @as(u16, @intCast(player_position.x + x)),
+                    @as(u16, @intCast(player_position.y + y)),
+                    0x04,
+                );
+            }
+        }
 
-        // Move the player to the right
-        // player_position.x += 1;
+        // Wait for the next frame
+        waitFrame();
+        // Copy the backbuffer to vram
+        copyBackBufferToVram();
     }
 
     try stdout.print("The colors #Programming Discussion\r\n", .{});
     try stdout.print("THE COLORS!!!\r\n", .{});
 }
 
-fn wait30Frames() void {
-    //     for (i=0; i<30; i++) {
-    //       /* Wait until we’re not in vertical sync, so we can catch leading edge */
-    //       while ((inp(INPUT_STATUS_1) & 0×08) != 0) ;
-    //       /* Wait until we are in vertical sync */
-    //       while ((inp(INPUT_STATUS_1) & 0×08) == 0) ;
-    //    }
-
-    for (0..30) |_| {
-        while (system.inp(0x3DA) & 0x08 != 0) {}
-        while (system.inp(0x3DA) & 0x08 == 0) {}
-    }
+fn waitFrame() void {
+    // Wait until we’re not in vertical sync, so we can catch leading edge
+    while (system.inp(VGA_INPUT_STATUS_1) & VGA_VRETRACE != 0) {}
+    // Wait until we are in vertical sync
+    while (system.inp(VGA_INPUT_STATUS_1) & VGA_VRETRACE == 0) {}
 }
 
 inline fn setVideoMode(video_mode: u8) void {
     _ = os.system.int(0x10, .{ .eax = video_mode });
+}
+
+fn drawPixel(frame_buffer: dpmi.Segment, x: u16, y: u16, color: u8) !void {
+    var far_ptr = frame_buffer.farPtr();
+    far_ptr.offset = (y << 8) + (y << 6) + x;
+    var writer = far_ptr.writer();
+    try writer.writeInt(u8, color, .Little);
+}
+
+fn clearFrameBuffer(frame_buffer: dpmi.Segment, color: u8) void {
+    var far_ptr = frame_buffer.farPtr();
+    far_ptr.writeRepeat(color, VGA_256_SIZE);
+}
+
+fn copyBackBufferToVram() void {
+    var far_ptr = vram_segment.farPtr();
+    var backbuffer_far_ptr = vram_backbuffer_segment.farPtr();
+    far_ptr.copyFrom(backbuffer_far_ptr, VGA_256_SIZE);
 }

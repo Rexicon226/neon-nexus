@@ -142,44 +142,16 @@ pub fn lseek(handle: fd_t, offset: off_t, whence: u8) off_t {
     return @intCast((regs.edx << 16) | regs.ax());
 }
 
-// TODO(SeedyROM): Implement inp and outp in general... this shit broky...
-
+// TODO(SeedyROM): Implement outp...
 pub fn inp(address: u16) u8 {
     var value: u8 = 0;
     asm volatile (
-        \\ inb %[address], %[value]
-        : [_] "+{al}" (value),
+        \\ inb %%dx, %%al
+        : [_] "={al}" (value),
         : [_] "{dx}" (address),
+        : "dx", "al"
     );
     return value;
-}
-
-pub fn inpw(address: u16) u16 {
-    var value: u16 = 0;
-    asm volatile (
-        \\ inw %[address], %[value]
-        : [_] "+{ax}" (value),
-        : [_] "{dx}" (address),
-    );
-    return value;
-}
-
-pub fn outp(address: u16, value: u8) void {
-    asm volatile (
-        \\ outb %[value], %[address]
-        : // No outputs
-        : [_] "{al}" (value),
-          [_] "{dx}" (address),
-    );
-}
-
-pub fn outpw(address: u16, value: u16) void {
-    asm volatile (
-        \\ outw %[value], %[address]
-        : // No outputs
-        : [_] "{ax}" (value),
-          [_] "{dx}" (address),
-    );
 }
 
 pub fn sched_yield() void {
