@@ -1,16 +1,14 @@
 const std = @import("std");
 
+// Import the dos SDK
 pub const os = @import("dos");
-const system = os.system;
-const dpmi = os.dpmi;
-
-const gfx = @import("gfx.zig").Graphics;
-const gfx_mode = @import("gfx.zig").GraphicsModes;
-
 // This is necessary to pull in the start code with Zig 0.11
 comptime {
     _ = @import("dos");
 }
+
+const gfx = @import("gfx.zig").Graphics;
+const gfx_mode = @import("gfx.zig").GraphicsModes;
 
 const stdout = std.io.getStdOut().writer();
 

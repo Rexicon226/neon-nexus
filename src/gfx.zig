@@ -4,8 +4,6 @@ const os = @import("dos");
 const system = os.system;
 const dpmi = os.dpmi;
 
-const stdout = std.io.getStdOut().writer();
-
 const GraphicsModeId = union(enum) {
     vga: u8,
 };
