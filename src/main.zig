@@ -64,7 +64,7 @@ pub fn main() !void {
         player_position.y %= 200;
 
         // Clear the screen to cyan
-        clearFrameBuffer(vram_backbuffer_segment, 0x03);
+        clear(vram_backbuffer_segment, 0x03);
 
         // Draw the player as a red rectangle
         for (0..player_size.y) |y| {
@@ -92,7 +92,7 @@ pub fn main() !void {
     try stdout.print("THE COLORS!!!\r\n", .{});
 }
 
-fn waitFrame() void {
+inline fn waitFrame() void {
     // Wait until we're not in vertical sync, so we can catch leading edge
     while (system.inp(VGA_INPUT_STATUS_1) & VGA_VRETRACE != 0) {}
     // Wait until we are in vertical sync
@@ -103,19 +103,19 @@ inline fn setVideoMode(video_mode: u8) void {
     _ = os.system.int(0x10, .{ .eax = video_mode });
 }
 
-fn drawPixel(frame_buffer: dpmi.Segment, x: u16, y: u16, color: u8) !void {
+inline fn drawPixel(frame_buffer: dpmi.Segment, x: u16, y: u16, color: u8) !void {
     var far_ptr = frame_buffer.farPtr();
     far_ptr.offset = (y << 8) + (y << 6) + x;
     var writer = far_ptr.writer();
     try writer.writeInt(u8, color, .Little);
 }
 
-fn clearFrameBuffer(frame_buffer: dpmi.Segment, color: u8) void {
+inline fn clear(frame_buffer: dpmi.Segment, color: u8) void {
     var far_ptr = frame_buffer.farPtr();
     far_ptr.writeRepeat(color, VGA_256_SIZE);
 }
 
-fn copyBackBufferToVram() void {
+inline fn copyBackBufferToVram() void {
     var far_ptr = vram_segment.farPtr();
     var backbuffer_far_ptr = vram_backbuffer_segment.farPtr();
     far_ptr.copyFrom(backbuffer_far_ptr, VGA_256_SIZE);
