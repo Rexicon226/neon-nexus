@@ -93,7 +93,7 @@ pub fn main() !void {
 }
 
 fn waitFrame() void {
-    // Wait until we’re not in vertical sync, so we can catch leading edge
+    // Wait until we're not in vertical sync, so we can catch leading edge
     while (system.inp(VGA_INPUT_STATUS_1) & VGA_VRETRACE != 0) {}
     // Wait until we are in vertical sync
     while (system.inp(VGA_INPUT_STATUS_1) & VGA_VRETRACE == 0) {}
