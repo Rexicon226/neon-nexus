@@ -36,7 +36,7 @@ pub fn build(b: *Build) !void {
         .{ .path = "deps/cwsdpmi/bin/CWSDSTUB.EXE" },
         neon_nexus_coff.addObjCopy(.{ .format = .bin }).getOutput(),
     };
-    const neon_nexus_exe = FileRecipeStep.create(b, concatFiles, &neon_nexus_exe_inputs, .bin, "nnexus.exe");
+    const neon_nexus_exe = FileRecipeStep.create(b, concatFiles, &neon_nexus_exe_inputs, .bin, b.fmt("{s}.exe", .{program_name}));
 
     const installed_neon_nexus = b.addInstallBinFile(neon_nexus_exe.getOutput(), b.fmt("{s}.exe", .{program_name}));
     b.getInstallStep().dependOn(&installed_neon_nexus.step);
