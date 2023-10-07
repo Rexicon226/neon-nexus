@@ -4,6 +4,8 @@ const os = @import("dos");
 const system = os.system;
 const dpmi = os.dpmi;
 
+const stdout = std.io.getStdOut().writer();
+
 const GraphicsModeId = union(enum) {
     vga: u8,
 };
@@ -54,10 +56,12 @@ pub const Graphics = struct {
 
     /// Initialize the graphics system
     pub fn init(mode_: GraphicsMode) !void {
+        mode = mode_;
         try initializeVram();
-        setMode(mode_);
+        try setMode();
     }
 
+    /// Initialize the vram
     inline fn initializeVram() !void {
         switch (mode.mode_id) {
             GraphicsModeId.vga => {
@@ -75,8 +79,13 @@ pub const Graphics = struct {
     }
 
     /// Set the graphics mode
-    inline fn setMode(mode_: GraphicsMode) void {
-        _ = os.system.int(0x10, .{ .eax = @intFromEnum(mode_.mode_id) });
+    inline fn setMode() !void {
+        switch (mode.mode_id) {
+            GraphicsModeId.vga => |id| {
+                // Set the graphics mode
+                _ = system.int(0x10, .{ .eax = id });
+            },
+        }
     }
 
     /// Wait for the next frame
@@ -91,7 +100,7 @@ pub const Graphics = struct {
     }
 
     /// Draw a pixel
-    pub inline fn drawPixel(x: u16, y: u16, color: u8) !void {
+    pub fn drawPixel(x: u16, y: u16, color: u8) !void {
         far_ptr = vram_backbuffer_segment.farPtr();
         far_ptr.offset = (y << 8) + (y << 6) + x;
         var writer = far_ptr.writer();
