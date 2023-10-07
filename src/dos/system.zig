@@ -142,6 +142,18 @@ pub fn lseek(handle: fd_t, offset: off_t, whence: u8) off_t {
     return @intCast((regs.edx << 16) | regs.ax());
 }
 
+// TODO(SeedyROM): Implement outp...
+pub fn inp(address: u16) u8 {
+    var value: u8 = 0;
+    asm volatile (
+        \\ inb %%dx, %%al
+        : [_] "={al}" (value),
+        : [_] "{dx}" (address),
+        : "dx", "al"
+    );
+    return value;
+}
+
 pub fn sched_yield() void {
     // TODO: Yield via DPMI (if present).
     // See: http://www.delorie.com/djgpp/doc/dpmi/api/2f1680.html

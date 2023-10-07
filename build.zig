@@ -36,11 +36,11 @@ pub fn build(b: *Build) !void {
     };
     const neon_nexus_exe = FileRecipeStep.create(b, concatFiles, &neon_nexus_exe_inputs, .bin, "nnexus.exe");
 
-    const installed_demo = b.addInstallBinFile(neon_nexus_exe.getOutput(), "nnexus.exe");
-    b.getInstallStep().dependOn(&installed_demo.step);
+    const installed_neon_nexus = b.addInstallBinFile(neon_nexus_exe.getOutput(), "nnexus.exe");
+    b.getInstallStep().dependOn(&installed_neon_nexus.step);
 
-    const run_in_dosbox = b.addSystemCommand(&[_][]const u8{"dosbox"});
-    run_in_dosbox.addFileArg(installed_demo.source);
+    const run_in_dosbox = b.addSystemCommand(&[_][]const u8{ "dosbox", "-conf", "dosbox_config.ini" });
+    run_in_dosbox.addFileArg(installed_neon_nexus.source);
 
     const run = b.step("run", "Run the demo program in DOSBox");
     run.dependOn(&run_in_dosbox.step);
