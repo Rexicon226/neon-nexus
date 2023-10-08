@@ -1,12 +1,5 @@
 steps:
-  backend:
-    image: golang
+  build:
+    image: sinontm/ziglang:v1
     commands:
-      - go build
-      - go test
-  frontend:
-    image: node
-    commands:
-      - npm install
-      - npm run test
-      - npm run build
+      - zig version
