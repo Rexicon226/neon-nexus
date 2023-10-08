@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const os = @import("nexus").os;
+const os = @import("../nexus.zig").os;
 
 const system = os.system;
 const dpmi = os.dpmi;
