@@ -36,3 +36,7 @@ zig build run-demo
 ## Docs
 
 - [Development Sources](./docs/SOURCES.md)
+
+## Legal
+
+To comply with the CWSDPMI license, published programs must provide notice to users that they have the right to receive the source code and/or binary updates for CWSDPMI. Distributors should indicate a site for the source in their documentation.
