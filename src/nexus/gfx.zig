@@ -1,6 +1,7 @@
 const std = @import("std");
 
-const os = @import("dos");
+const os = @import("nexus").os;
+
 const system = os.system;
 const dpmi = os.dpmi;
 

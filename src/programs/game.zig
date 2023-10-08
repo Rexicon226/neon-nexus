@@ -1,14 +1,15 @@
 const std = @import("std");
 
-// Import the dos SDK
-pub const os = @import("dos");
-// This is necessary to pull in the start code with Zig 0.11
+const nexus = @import("nexus");
+
+// Required for pulling symbols.
+pub const os = nexus.os;
 comptime {
-    _ = @import("dos");
+    _ = @import("nexus").os;
 }
 
-const gfx = @import("gfx").Graphics;
-const gfx_mode = @import("gfx").GraphicsModes;
+const gfx = nexus.gfx.Graphics;
+const gfx_mode = nexus.gfx.GraphicsModes;
 
 const stdout = std.io.getStdOut().writer();
 

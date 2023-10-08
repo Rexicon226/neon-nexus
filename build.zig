@@ -41,19 +41,11 @@ pub fn build(b: *Build) !void {
         var file_split = std.mem.splitSequence(u8, file_name, ".");
         var file_stripped = file_split.next().?;
 
-        const dos_mod = b.addModule("dos", .{
-            .source_file = .{ .path = "src/dos.zig" },
+        const nexus_mod = b.addModule("nexus", .{
+            .source_file = .{ .path = "src/nexus.zig" },
         });
 
-        const gfx_mod = b.addModule("gfx", .{
-            .source_file = .{ .path = "src/gfx.zig" },
-            .dependencies = &.{
-                .{ .name = "dos", .module = dos_mod },
-            },
-        });
-
-        neon_nexus_coff.addModule("dos", dos_mod);
-        neon_nexus_coff.addModule("gfx", gfx_mod);
+        neon_nexus_coff.addModule("nexus", nexus_mod);
 
         neon_nexus_coff.setLinkerScript(.{ .path = "src/djcoff.ld" });
         neon_nexus_coff.disable_stack_probing = true;

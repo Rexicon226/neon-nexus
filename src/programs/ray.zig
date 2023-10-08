@@ -1,17 +1,16 @@
 // A Raytracer built with Neon Nexus
 
-pub const os = @import("dos");
-const system = os.system;
-const dpmi = os.dpmi;
+const std = @import("std");
+const nexus = @import("nexus");
 
+// Required for pulling symbols.
+pub const os = nexus.os;
 comptime {
-    _ = @import("dos");
+    _ = @import("nexus").os;
 }
 
-const std = @import("std");
-
-const gfx = @import("gfx").Graphics;
-const gfx_mode = @import("gfx").GraphicsModes;
+const gfx = nexus.gfx.Graphics;
+const gfx_mode = nexus.gfx.GraphicsModes;
 
 var buffer: [1000]u8 = undefined;
 var fba = std.heap.FixedBufferAllocator.init(&buffer);
