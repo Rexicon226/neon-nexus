@@ -72,6 +72,38 @@ const vec3 = struct {
     }
 };
 
+const RGB = struct {
+    r: u8,
+    g: u8,
+    b: u8,
+
+    pub fn init(r: u8, g: u8, b: u8) RGB {
+        return .{ .r = r, .g = g, .b = b };
+    }
+
+    pub fn fromVec3(v: vec3) RGB {
+        std.debug.assert(v.x < 255 and v.y < 255 and v.z < 255);
+
+        return RGB.init(
+            @as(u8, @intFromFloat(v.x)),
+            @as(u8, @intFromFloat(v.y)),
+            @as(u8, @intFromFloat(v.z)),
+        );
+    }
+
+    pub fn toVec3(self: RGB) vec3 {
+        return vec3.init(
+            @as(f32, @floatFromInt(self.r)),
+            @as(f32, @floatFromInt(self.g)),
+            @as(f32, @floatFromInt(self.b)),
+        );
+    }
+
+    pub fn RGB2VGA(self: RGB) u8 {
+        return ((self.b & 0xC0) >> 6) | ((self.g & 0xE0) >> 2) | ((self.r & 0xE0) >> 5);
+    }
+};
+
 const vec4 = struct {
     x: f32,
     y: f32,
@@ -139,9 +171,9 @@ const Ray = struct {
 const Sphere = struct {
     position: vec3,
     radius: f32,
-    color: u8,
+    color: RGB,
 
-    pub fn init(position: vec3, radius: f32, color: u8) Sphere {
+    pub fn init(position: vec3, radius: f32, color: RGB) Sphere {
         return .{
             .position = position,
             .radius = radius,
@@ -166,6 +198,7 @@ const Sphere = struct {
                 .position = vec3.init(0, 0, 0),
                 .normal = vec3.init(0, 0, 0),
                 .distance = 0,
+                .color = self.color.toVec3(),
             };
         } else {
             const t = (-b - @sqrt(discriminant)) / (2.0 * a);
@@ -177,17 +210,13 @@ const Sphere = struct {
                 .position = position,
                 .normal = normal,
                 .distance = t,
+                .color = self.color.toVec3(),
             };
         }
     }
 };
 
-const Intersection = struct {
-    hits: bool,
-    position: vec3,
-    normal: vec3,
-    distance: f32,
-};
+const Intersection = struct { hits: bool, position: vec3, normal: vec3, distance: f32, color: vec3 };
 
 const Point = struct {
     x: u32,
@@ -208,12 +237,7 @@ const Scene = struct {
     }
 
     fn intersect(self: Scene, ray: Ray) Intersection {
-        var closest_intersection: Intersection = .{
-            .hits = false,
-            .position = vec3.init(0, 0, 0),
-            .normal = vec3.init(0, 0, 0),
-            .distance = 0,
-        };
+        var closest_intersection: Intersection = .{ .hits = false, .position = vec3.init(0, 0, 0), .normal = vec3.init(0, 0, 0), .distance = 0, .color = vec3.init(0, 0, 0) };
 
         for (self.objects.items) |sphere| {
             const hit = sphere.intersect(ray);
@@ -240,9 +264,8 @@ const Scene = struct {
         if (hit.hits == true) {
             const light_direction = vec3.init(-1.0, 2.0, -1.0).normalize();
             const diffuse_factor: f32 = @max(hit.normal.dot(light_direction), 0.0);
-            _ = diffuse_factor;
-            const color: u8 = 4; // * @as(u8, @intFromFloat(diffuse_factor));
-            return color;
+            const color: vec3 = hit.color.mult(diffuse_factor);
+            return RGB.fromVec3(color).RGB2VGA();
         }
 
         return 0;
@@ -259,7 +282,7 @@ pub fn main() !void {
 
     var scene = Scene.init();
 
-    var sphere = Sphere.init(vec3.init(0, 0, -20), 13, 4);
+    var sphere = Sphere.init(vec3.init(0, 0, -20), 13, RGB.init(100, 100, 50));
     try scene.add(sphere);
 
     var camera_pos = vec3.init(0, 0, 0);

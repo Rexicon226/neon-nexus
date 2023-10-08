@@ -5,7 +5,9 @@ steps:
       - zig version
       - zig fmt --check .
 
-  build-demo:
+  build:
     image: sinontm/ziglang:v1
     commands:
       - zig build demo
+      - zig build ray
+      - zig build game
