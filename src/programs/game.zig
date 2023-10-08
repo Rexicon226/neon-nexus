@@ -7,8 +7,8 @@ comptime {
     _ = @import("dos");
 }
 
-const gfx = @import("gfx.zig").Graphics;
-const gfx_mode = @import("gfx.zig").GraphicsModes;
+const gfx = @import("gfx").Graphics;
+const gfx_mode = @import("gfx").GraphicsModes;
 
 const stdout = std.io.getStdOut().writer();
 
