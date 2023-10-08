@@ -14,9 +14,6 @@ const sound_card = nexus.sound.SoundCards;
 pub fn main() !void {
     try sound.init(sound_card.PCSpeaker);
 
-    // Test Beep 1000 times.
-    var i: u32 = 0;
-    while (i < 1000) : (i += 1) {
-        try sound.beep(i);
-    }
+    // Test Beep 1 time.
+    try sound.beep(@truncate(100));
 }

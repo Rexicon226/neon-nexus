@@ -45,18 +45,16 @@ pub const Sound = struct {
         }
     }
 
-    pub fn beep(hz: u32) !void {
-        _ = hz;
+    pub fn beep(hz: u16) !void {
         switch (mode.id) {
-            .SoundBlaster => {
-                return error.Unsupported;
-            },
             .PCSpeaker => {
                 _ = asm volatile (
-                    \\movw $150, %%bx
+                    \\movw %[hz], %%bx
                     \\movw 0x34DD, %%ax
                     \\movw 0x0012, %%dx
                     \\cmp %%bx, %%dx
+                    \\jnc 1f
+                    \\div %%bx
                     \\movw %%ax, %%bx
                     \\inb $0x61, %%al
                     \\testb $0x3, %%al
@@ -64,18 +62,33 @@ pub const Sound = struct {
                     \\outb %%al, $0x61
                     \\movb $0xB6, %%al
                     \\outb %%al, $0x43
-                    \\jnz 1f
+                    \\jnz 99f
                     \\orb $0x3, %%al
                     \\outb %%al, $0x61
                     \\movb 0x0B6, %%al
                     \\outb %%al, $0x43
+                    \\call 2f
                     \\
-                    \\1: 
+                    \\1:
+                    \\  ret
+                    \\
+                    \\99:
                     \\  movb %%bl, %%al
                     \\  outb %%al, $0x42
                     \\  movb %%bh, %%al
                     \\  outb %%al, $0x42
+                    \\
+                    \\2:
+                    \\  inb $0x61, %%al
+                    \\  andb $0xFC, %%al
+                    \\  outb %%al, $0x61
+                    \\  ret
+                    :
+                    : [hz] "{bx}" (hz),
                 );
+            },
+            .SoundBlaster => {
+                return error.Unsupported;
             },
         }
     }

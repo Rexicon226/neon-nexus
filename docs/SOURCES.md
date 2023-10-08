@@ -16,8 +16,14 @@
 - [Double Buffering/Unchained Mode](http://www.brackeen.com/vga/unchain.html)
 - [Page from "Graphics Programming Black Book © 2001 Michael Abrash"](https://www.phatcode.net/res/224/files/html/ch45/45-05.html)
 
+## Sound
+
+- [SoundBlaster Spec](https://pdos.csail.mit.edu/6.828/2018/readings/hardware/SoundBlaster.pdf)
+- [Programming Guide](https://web.archive.org/web/20091202044223/http://fly.srk.fer.hr/GDM/articles/sndmus/speaker1.html)
+
 ## MSDOS
 
 - [MSDOS API](https://en.wikipedia.org/wiki/DOS_API)
 - [MSDOS Interrupts](http://www.ctyme.com/intr/int.htm)
 - [conio.h](https://en.wikipedia.org/wiki/Conio.h)
+- [DOS Env](http://www.techhelpmanual.com/346-dos_environment.html)
