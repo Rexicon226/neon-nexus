@@ -8,7 +8,7 @@ const GraphicsModeId = union(enum) {
     vga: u8,
 };
 
-pub const GraphicsMode = struct {
+const GraphicsMode = struct {
     mode_id: GraphicsModeId,
     width: u16,
     height: u16,
@@ -17,7 +17,7 @@ pub const GraphicsMode = struct {
     memory_address: u32,
 };
 
-pub const VgaDeviceSpec = struct {
+const VgaDeviceSpec = struct {
     pub const INPUT_STATUS_1 = 0x3DA;
     pub const INPUT_STATUS_1_VRETRACE = 0x08;
 };
