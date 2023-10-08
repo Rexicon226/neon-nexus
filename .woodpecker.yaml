@@ -1,5 +1,11 @@
 steps:
-  build:
+  checks:
     image: sinontm/ziglang:v1
     commands:
       - zig version
+      - zig fmt --check .
+
+  build-demo:
+    image: sinontm/ziglang:v1
+    commands:
+      - zig build demo
