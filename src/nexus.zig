@@ -2,4 +2,4 @@
 pub const gfx = @import("gfx.zig");
 
 // Internal DOS SDK.
-pub const os = @import("dos.zig");
+pub const os = @import("nexus/dos.zig");
