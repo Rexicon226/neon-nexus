@@ -19,6 +19,9 @@ pub fn build(b: *Build) !void {
         if (file.kind != .file) {
             continue;
         }
+        if (!std.mem.endsWith(u8, file.name, ".zig")) {
+            continue;
+        }
         try files.append(b.dupe(file.name));
     }
 
@@ -37,11 +40,21 @@ pub fn build(b: *Build) !void {
 
         var file_split = std.mem.splitSequence(u8, file_name, ".");
 
-        neon_nexus_coff.addModule("dos", b.addModule("dos", .{
+        const dos_mod = b.addModule("dos", .{
             .source_file = .{ .path = "src/dos.zig" },
-        }));
+        });
 
-        neon_nexus_coff.setLinkerScriptPath(.{ .path = "src/djcoff.ld" });
+        const gfx_mod = b.addModule("gfx", .{
+            .source_file = .{ .path = "src/gfx.zig" },
+            .dependencies = &.{
+                .{ .name = "dos", .module = dos_mod },
+            },
+        });
+
+        neon_nexus_coff.addModule("dos", dos_mod);
+        neon_nexus_coff.addModule("gfx", gfx_mod);
+
+        neon_nexus_coff.setLinkerScript(.{ .path = "src/djcoff.ld" });
         neon_nexus_coff.disable_stack_probing = true;
         neon_nexus_coff.strip = true;
 
