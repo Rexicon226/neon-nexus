@@ -1,0 +1,12 @@
+steps:
+  backend:
+    image: golang
+    commands:
+      - go build
+      - go test
+  frontend:
+    image: node
+    commands:
+      - npm install
+      - npm run test
+      - npm run build
