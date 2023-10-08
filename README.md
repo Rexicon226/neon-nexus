@@ -39,4 +39,7 @@ zig build run-demo
 
 ## Legal
 
+```
 To comply with the CWSDPMI license, published programs must provide notice to users that they have the right to receive the source code and/or binary updates for CWSDPMI. Distributors should indicate a site for the source in their documentation.
+```
+You can find the CWSDPMI source code [here](https://github.com/jayschwa/cwsdpmi).
