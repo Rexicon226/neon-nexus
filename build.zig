@@ -13,7 +13,7 @@ pub fn build(b: *Build) !void {
     var files = std.ArrayList([]const u8).init(b.allocator);
     defer files.deinit();
 
-    var dir = try std.fs.cwd().openIterableDir("src/programs", .{});
+    var dir = try std.fs.cwd().openIterableDir("programs", .{});
     var it = dir.iterate();
     while (try it.next()) |file| {
         if (file.kind != .file) {
@@ -34,7 +34,7 @@ pub fn build(b: *Build) !void {
                 .os_tag = .other,
             },
             .optimize = optimize,
-            .root_source_file = .{ .path = b.fmt("src/programs/{s}", .{file_name}) },
+            .root_source_file = .{ .path = b.fmt("programs/{s}", .{file_name}) },
             .single_threaded = true,
         });
 
