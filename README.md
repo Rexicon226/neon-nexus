@@ -4,7 +4,7 @@ Nexus is an SDK for writing DOS applications/games based on Jay Petacat's [dos.z
 
 We've expanded on the original library to include:
 
-- Better FatPtr support/use
+- Better FarPtr support/use
 - More `<dos.h>` and `<conio.h>` compatibility
 - A simple graphics API
   - Using DPMI VGA access
