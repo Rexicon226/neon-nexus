@@ -1,15 +1,15 @@
 // A Demo Program for Neon Nexus
 
-// This is required for the custom '_start'
+const std = @import("std");
 
-pub const os = @import("dos");
-const system = os.system;
-const dpmi = os.dpmi;
+const nexus = @import("nexus");
+
+// Required for pulling symbols.
+pub const os = nexus.os;
 comptime {
-    _ = @import("dos");
+    _ = @import("nexus").os;
 }
 
-const std = @import("std");
 pub fn main() !void {
     std.debug.print("Hello, World!\n", .{});
 }
