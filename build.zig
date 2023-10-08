@@ -39,6 +39,7 @@ pub fn build(b: *Build) !void {
         });
 
         var file_split = std.mem.splitSequence(u8, file_name, ".");
+        var file_stripped = file_split.next().?;
 
         const dos_mod = b.addModule("dos", .{
             .source_file = .{ .path = "src/dos.zig" },
@@ -58,15 +59,13 @@ pub fn build(b: *Build) !void {
         neon_nexus_coff.disable_stack_probing = true;
         neon_nexus_coff.strip = true;
 
-        const file_stripped = file_split.next().?;
-
         const neon_nexus_exe_inputs = [_]Build.LazyPath{
             .{ .path = "deps/cwsdpmi/bin/CWSDSTUB.EXE" },
             neon_nexus_coff.addObjCopy(.{ .format = .bin }).getOutput(),
         };
-        const neon_nexus_exe = FileRecipeStep.create(b, concatFiles, &neon_nexus_exe_inputs, .bin, b.fmt("{s}.exe", .{file_stripped}));
+        const neon_nexus_exe = FileRecipeStep.create(b, concatFiles, &neon_nexus_exe_inputs, .bin, b.fmt("{s}.exe", .{file_stripped[0..@min(file_stripped.len, 7)]}));
 
-        const installed_neon_nexus = b.addInstallBinFile(neon_nexus_exe.getOutput(), b.fmt("{s}.exe", .{file_stripped}));
+        const installed_neon_nexus = b.addInstallBinFile(neon_nexus_exe.getOutput(), b.fmt("{s}.exe", .{file_stripped[0..@min(file_stripped.len, 7)]}));
         b.step(file_stripped, b.fmt("Build the {s} program", .{file_stripped})).dependOn(&installed_neon_nexus.step);
 
         const run_in_dosbox = b.addSystemCommand(&[_][]const u8{ "dosbox", "-conf", "dosbox_config.ini" });
