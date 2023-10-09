@@ -15,5 +15,5 @@ pub fn main() !void {
     try sound.init(sound_card.PCSpeaker);
 
     // Test Beep 1 time.
-    try sound.beep(@truncate(100));
+    try sound.beep(400, 10);
 }

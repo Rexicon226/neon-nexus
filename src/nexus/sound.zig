@@ -31,7 +31,7 @@ pub const SoundCards = struct {
 };
 
 pub const Sound = struct {
-    const self = @This();
+    const Self = @This();
 
     var mode: SoundCard = undefined;
 
@@ -45,46 +45,44 @@ pub const Sound = struct {
         }
     }
 
-    pub fn beep(hz: u16) !void {
+    pub fn beep(hz: u16, milliseconds: u32) !void {
+        _ = milliseconds;
         switch (mode.id) {
             .PCSpeaker => {
                 _ = asm volatile (
-                    \\movw %[hz], %%bx
-                    \\movw 0x34DD, %%ax
-                    \\movw 0x0012, %%dx
-                    \\cmp %%bx, %%dx
-                    \\jnc 1f
-                    \\div %%bx
-                    \\movw %%ax, %%bx
-                    \\inb $0x61, %%al
-                    \\testb $0x3, %%al
-                    \\orb $0x3, %%al
-                    \\outb %%al, $0x61
-                    \\movb $0xB6, %%al
-                    \\outb %%al, $0x43
-                    \\jnz 99f
-                    \\orb $0x3, %%al
-                    \\outb %%al, $0x61
-                    \\movb 0x0B6, %%al
-                    \\outb %%al, $0x43
-                    \\call 2f
+                    \\mov %[hz], %%ax
+                    \\call sound
+                    \\xor %%ax, %%ax
+                    \\int $0x16
+                    \\call nosound
+                    \\int $0x20
                     \\
-                    \\1:
+                    \\
+                    \\nosound:
+                    \\  inb   $0x61, %%al
+                    \\  andb  0xFC, %%al
+                    \\  outb  %%al, $0x61
                     \\  ret
                     \\
-                    \\99:
-                    \\  movb %%bl, %%al
-                    \\  outb %%al, $0x42
-                    \\  movb %%bh, %%al
-                    \\  outb %%al, $0x42
                     \\
-                    \\2:
-                    \\  inb $0x61, %%al
-                    \\  andb $0xFC, %%al
-                    \\  outb %%al, $0x61
+                    \\sound: 
+                    \\  mov   %%ax, %%bx
+                    \\  mov   0x12, %%dx
+                    \\  mov   0x34DC, %%ax
+                    \\  div   %%bx
+                    \\  mov   %%al, %%bl
+                    \\  mov   0xB6, %%al 
+                    \\  outb  %%al, $0x43
+                    \\  mov   %%bl, %%al
+                    \\  outb  %%al, $0x42
+                    \\  mov   %%ah, %%al
+                    \\  outb  %%al, $0x42
+                    \\  inb   $0x61, %%al
+                    \\  or    $3, %%al
+                    \\  outb  %%al, $0x61
                     \\  ret
-                    :
-                    : [hz] "{bx}" (hz),
+                    : // Returns AX, BX, DX = undefined;
+                    : [hz] "{ax}" (hz),
                 );
             },
             .SoundBlaster => {
